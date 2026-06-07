@@ -1,3 +1,4 @@
+#i have commented out certain portions which were part of the learning process but are not required while running the code
 import torch
 import matplotlib.pyplot as plt
 
