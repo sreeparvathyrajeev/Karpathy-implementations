@@ -138,36 +138,55 @@ for i in range(max_steps):
     with torch.no_grad():
         ud.append([((lr*p.grad).std()/p.data.std().log10().item()) for p in parameters]) #append the update distance (the ratio of the standard deviation of the parameter updates to the standard deviation of the parameters) to the list for plotting
     
-    
+@torch.no_grad() # this decorator disables gradient tracking
+def split_loss(split):
+  x,y = {
+    'train': (Xtr, Ytr),
+    'val': (Xdev, Ydev),
+    'test': (Xte, Yte),
+  }[split]
+  emb = C[x] # (N, block_size, n_embd)
+  x = emb.view(emb.shape[0], -1) # concat into (N, block_size * n_embd)
+  for layer in layers:
+    x = layer(x)
+  loss = F.cross_entropy(x, y)
+  print(split, loss.item())
 
-words= open('names.txt', 'r').read().splitlines()
-chars=sorted(list(set(''.join(words))))
-stoi={s:i+1 for i,s in enumerate(chars)}
-stoi['.']=0
-itos={i:s for s,i in stoi.items()}
+# put layers into eval mode
+for layer in layers:
+  layer.training = False
+split_loss('train')
+split_loss('val')   
 
-# sample from the model
-g = torch.Generator().manual_seed(2147483647 + 10)
+# words= open('names.txt', 'r').read().splitlines()
+# chars=sorted(list(set(''.join(words))))
+# stoi={s:i+1 for i,s in enumerate(chars)}
+# stoi['.']=0
+# itos={i:s for s,i in stoi.items()}
 
-for _ in range(20):
+# # sample from the model
+# g = torch.Generator().manual_seed(2147483647 + 10)
+
+# for _ in range(20):
     
-    out = []
-    context = [0] * block_size # initialize with all ...
-    while True:
-      # forward pass the neural net
-      emb = C[torch.tensor([context])] # (1,block_size,n_embd)
-      x = emb.view(emb.shape[0], -1) # concatenate the vectors
-      for layer in layers:
-        x = layer(x)
-      logits = x
-      probs = F.softmax(logits, dim=1)
-      # sample from the distribution
-      ix = torch.multinomial(probs, num_samples=1, generator=g).item()
-      # shift the context window and track the samples
-      context = context[1:] + [ix]
-      out.append(ix)
-      # if we sample the special '.' token, break
-      if ix == 0:
-        break
+#     out = []
+#     context = [0] * block_size # initialize with all zeros, which corresponds to the '.' token in our vocabulary.
+#     # This means that we start with an empty context when generating a new word.
+#     while True:
+#       # forward pass the neural net
+#       emb = C[torch.tensor([context])] # (1,block_size,n_embd)
+#       x = emb.view(emb.shape[0], -1) # concatenate the vectors
+#       for layer in layers:
+#         x = layer(x)
+#       logits = x
+#       probs = F.softmax(logits, dim=1)
+#       # sample from the distribution
+#       ix = torch.multinomial(probs, num_samples=1, generator=g).item()
+#       # shift the context window and track the samples
+#       context = context[1:] + [ix]
+#       out.append(ix)
+#       # if we sample the special '.' token, break
+#       if ix == 0:
+#         break
     
-    print(''.join(itos[i] for i in out)) # decode and print the generated word
+#     print(''.join(itos[i] for i in out)) # decode and print the generated word
