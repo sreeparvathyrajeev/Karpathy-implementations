@@ -12,7 +12,7 @@ Personal implementations from [Andrej Karpathy's Neural Networks: Zero to Hero](
 ## In progress
 
 - Backprop Ninja (manual backpropagation)
-- WaveNet-style deep MLP
+
 
 ## Notes
 
