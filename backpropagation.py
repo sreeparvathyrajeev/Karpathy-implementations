@@ -120,3 +120,23 @@ cmp('probs',dprobs,probs)
 dcounts_sum_inv= (counts * dprobs).sum(dim=1, keepdim=True)
 cmp('counts_sum_inv',dcounts_sum_inv,counts_sum_inv)
 
+dcounts= counts_sum_inv * dprobs
+
+
+dcounts_sum= - (counts_sum**(-2)) * dcounts_sum_inv
+cmp('counts_sum',dcounts_sum,counts_sum)
+
+dcounts += torch.ones_like(counts) * dcounts_sum
+cmp('counts',dcounts,counts)
+
+dnorm_logits= counts * dcounts
+cmp('norm_logits',dnorm_logits,norm_logits)
+
+dlogits= dnorm_logits.clone()
+
+dlogit_maxes= -dnorm_logits.sum(dim=1, keepdim=True)
+cmp('logit_maxes',dlogit_maxes,logit_maxes)
+
+dlogits += F.one_hot(logits.max(1).indices, num_classes= logits.shape[1]) * dlogit_maxes
+cmp('logits',dlogits,logits)
+
