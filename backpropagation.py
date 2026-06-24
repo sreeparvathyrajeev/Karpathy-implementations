@@ -140,3 +140,10 @@ cmp('logit_maxes',dlogit_maxes,logit_maxes)
 dlogits += F.one_hot(logits.max(1).indices, num_classes= logits.shape[1]) * dlogit_maxes
 cmp('logits',dlogits,logits)
 
+dh= dlogits @ W2.T
+dW2= h.T @ dlogits
+db2= dlogits.sum(dim=0)
+
+cmp('h',dh,h)
+cmp('W2',dW2,W2)
+cmp('b2',db2,b2)    
